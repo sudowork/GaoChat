@@ -1,0 +1,29 @@
+					GaoChat
+
+@product	GaoChat
+@version	0.1
+@author		Kevin Gao
+
+What is Gao Chat?
+===============
+GaoChat is a C++ based chat server and client. This is not a serious
+project; instead, it is just an academic assignment used to explore
+the use of sockets in networking. This project is being made for
+ECE 156 at Duke University, taught by Romit Choudhury in the Fall
+2011 semester.
+
+Downloading
+===============
+The source for the project can be found at the following git repo:
+    http://github.com/sudowork/GaoChat
+
+Installing
+===============
+Please see the INSTALL file for instructions on installing.
+
+Documentation
+===============
+
+Contact
+===============
+You can reach me at kevin<dot>gao<at>duke<dot>edu

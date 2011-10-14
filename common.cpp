@@ -53,3 +53,14 @@ Command str2cmd(string input) {
 bool isCmd(string input) {
 	return input[0] == CMD_ESCAPE;
 }
+
+string c2substr(char *c, unsigned int start, unsigned int n) {
+	string sub = "";
+	int length = strlen(c);
+	int i = (start >= length) ? 0 : start;			// ensure start does not exceed index
+	int stop = (i + n > length) ? length : i + n;	// ensure stop point does not exceed index
+	for (int i = start; i < stop; i++) {
+		sub += c[i];
+	}
+	return sub;
+}

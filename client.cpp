@@ -58,7 +58,7 @@ using namespace std;
 				TCPSocket* sockSend = new TCPSocket(_server,S_PORT_LST);
 
 				char *msg = (char *) malloc(input.length() * sizeof(char));
-				input.copy(msg,input.length());
+				msg = (char *)input.c_str();
 
 				// Send stream
 				if (sockSend->send(msg,strlen(msg)) == -1) {

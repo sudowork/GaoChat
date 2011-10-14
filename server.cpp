@@ -37,6 +37,7 @@ using namespace std;
 			// Declare buffer and msgsize
 			char buffer[RECV_BUFFER_SIZE];
 			int msgSize;
+			memset(&buffer, 0, RECV_BUFFER_SIZE);
 
 			// Create new socket to receive from
 			// Note: automatic cleanup upon exiting loop
@@ -46,8 +47,8 @@ using namespace std;
 			// Receive and print
 			string msg = "";
 			while ((msgSize = t->recv(buffer,RECV_BUFFER_SIZE)) > 0) {
-				msg = msg + buffer;
-				memset(&buffer, 0, RECV_BUFFER_SIZE);
+				msg += c2substr(buffer);
+				memset(buffer, 0, RECV_BUFFER_SIZE);
 			}
 
 			/* TODO

@@ -36,5 +36,6 @@ std::string prompt(std::string message);		// Prompts with message and returns in
 Command str2cmd(std::string input);		// Returns which command and argument
 std::vector<std::string> explode(std::string str, char delim);	// Splits string by delimiter
 bool isCmd(std::string input);				// Simply evaluates whether input starts with the escape for commands
+std::string c2substr(char * c, unsigned int start=0, unsigned int n=RECV_BUFFER_SIZE);	// returns substring from char array
 
 #endif

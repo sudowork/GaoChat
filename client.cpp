@@ -1,12 +1,18 @@
+#include "common.h"		// Shared constants and functions
+#include "gaosocket.h"	// Includes socket dependencies 
 #include "client.h"
+
+using namespace std;
 
 // class Client
 //
 
 	// Constructor
 	Client::Client() {
-		_server = "127.0.0.1";
-		inet_pton(AF_INET,_server.c_str(),&(_serversa));	// Set default value of server to localhost
+		_server = "127.0.0.1";	// Set default value of server
+	}
+
+	Client::~Client() {
 	}
 
 	// Getters and Setters
@@ -23,23 +29,56 @@
 	}
 	
 	// Connects to server and requests list of peers from server
-	void Client::bootstrap() {
+	bool Client::bootstrap() {
+		print("Bootstrapping with `" + this->server() + "`...");
+
+		/* TODO
+		 * perform actual bootstrap function
+		 * */
+
+		/* TODO
+		 * separate into separate function
+		 */
+		try {
+			// Wait for input
+			for (;;) {
+				string input;
+
+				cout << ">";
+				getline(cin,input);
+				
+				// Check for command
+				if (isCmd(input)) {
+					// Stop taking input if quit command is given
+					if ((str2cmd(input).cmd).compare(QUIT) == 0) break;
+				}
+
+				// Send stream 
+				// Create socket connection with server
+				TCPSocket* sockSend = new TCPSocket(_server,S_PORT_LST);
+
+				char *msg = (char *) malloc(input.length() * sizeof(char));
+				input.copy(msg,input.length());
+
+				// Send stream
+				if (sockSend->send(msg,strlen(msg)) == -1) {
+					/* TODO
+					 * ADD ERROR CHECKING
+					 */
+				}
+
+				// Close socket
+				delete sockSend;
+			}
+		} catch (exception &e) {
+			cerr << e.what() << endl;
+			exit(1);
+		}
+		return true;
 	}
 
 //
 // END class Client
-
-void print(string message) {
-	cout << message << endl;
-}
-
-// Prompts with message, and return input
-string prompt(string message) {
-	string answer;
-	cout << message;
-	cin >> answer;
-	return answer;
-}
 
 // Prompts for server IP and then sets; loop until valid IP is given
 void promptServer(Client* client) {
@@ -53,11 +92,11 @@ void promptServer(Client* client) {
 		first = false;
 	} while (!client->server(ip));
 
-	print("Server successfully set to " + client->server());
+	print("Server set to `" + client->server() + "`");
 }
 
 int main(int argc, char *argv[]) {
-	Client* c = new Client();	// Construct new client object
+	Client *c = new Client();	// Construct new client object
 	// Handle arguments/options
 	// Set server address
 	if (argc > 1) {

@@ -57,13 +57,17 @@ using namespace std;
 				// If bootstrap command
 				if (cmd.isValid && cmd.cmd.compare(BOOTSTRAP) == 0) {
 					// Remove previous entry if exists
-					_clients.erase(t->getRemoteAddr() + ":" + cmd.args[0]);
+					_clients.erase(cmd.args[1]);
 					// Add connecting client to list of clients
 					_clients.insert(pair<string,string>(cmd.args[1],t->getRemoteAddr() + ":" + cmd.args[0]));
 					// Send updated list back to client
 					unsigned short port;
 					istringstream(cmd.args[0]) >> port;
 					sendMsg("/bootstrap " + map2str(_clients),t->getRemoteAddr(),port);
+				}
+				// If quit, then remove client from list of clients
+				if (cmd.isValid && cmd.cmd.compare(QUIT) == 0 ){
+					_clients.erase(cmd.args[0]);
 				}
 			}
 

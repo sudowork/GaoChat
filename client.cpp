@@ -103,6 +103,8 @@ void Client::userInput() {
 			if (isCmd(input)) {
 				// Stop taking input if quit command is given
 				if ((str2cmd(input).cmd).compare(QUIT) == 0) {
+					// Inform remote side that quitting
+					sendMsg(CMD_ESCAPE + QUIT + CMD_DELIM + _nick,ip,port);
 					// Check if in P2P conversation
 					if (_p2p) {
 						// Just leave conversation
@@ -140,12 +142,12 @@ void Client::userInput() {
 						print("No argument supplied, the command is `/msg <NICK>`");
 					}
 				}
+			} else {
+				// Send message
+				// If p2p mode, prepend nick
+				if (_p2p) input = "\n" + _nick + ">" + input;
+				sendMsg(input,ip,port);
 			}
-
-			// Send message
-			// If p2p mode, prepend nick
-			if (_p2p) input = "\n" + _nick + ">" + input;
-			sendMsg(input,ip,port);
 
 		}
 	} catch (exception &e) {
@@ -172,7 +174,10 @@ void Client::listen() {
 			memset(buffer, 0, RECV_BUFFER_SIZE);
 		}
 
-		print(msg);
+		if (isCmd(msg) && (str2cmd(msg)).isValid) {
+		} else {
+			print(msg);
+		}
 	}
 }
 

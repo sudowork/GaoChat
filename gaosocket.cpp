@@ -34,6 +34,15 @@ using namespace std;
 		return inet_ntoa(addr.sin_addr);
 	}
 
+	short unsigned Socket::getRemotePort() {
+		sockaddr_in addr;
+		unsigned int addr_len = sizeof(addr);
+		if (getpeername(this->_sockDesc, (sockaddr *) &addr, (socklen_t *) &addr_len) < 0) {
+			error("Could not get port of peer");
+		}
+		return ntohs(addr.sin_port);
+	}
+
 	int Socket::getSockFD() {
 		return _sockDesc;
 	}

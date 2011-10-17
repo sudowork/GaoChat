@@ -57,9 +57,9 @@ using namespace std;
 				// If bootstrap command
 				if (cmd.isValid && cmd.cmd.compare(BOOTSTRAP) == 0) {
 					// Remove previous entry if exists
-					_clients.erase(cmd.args[1]);
+					_clients.erase(cmd.args[0]);
 					// Add connecting client to list of clients
-					_clients.insert(pair<string,string>(cmd.args[1],t->getRemoteAddr() + ":" + cmd.args[0]));
+					_clients.insert(pair<string,string>(t->getRemoteAddr() + ":" + cmd.args[0],cmd.args[1]));
 					// Send updated list back to client
 					unsigned short port;
 					istringstream(cmd.args[0]) >> port;
@@ -69,8 +69,28 @@ using namespace std;
 				if (cmd.isValid && cmd.cmd.compare(QUIT) == 0 ){
 					_clients.erase(cmd.args[0]);
 				}
-			}
 
+				// If getpeers, send client list
+				if (cmd.isValid && cmd.cmd.compare(GETPEERS) == 0) {
+					unsigned short port;
+					istringstream(cmd.args[0]) >> port;
+					sendMsg("/bootstrap " + map2str(_clients),t->getRemoteAddr(),port);
+				}
+			} else {
+				// Blast message to all peers - originator
+				unsigned int p;
+				istringstream(msg.substr(0,msg.find(':'))) >> p;
+				msg.erase(0,msg.find(':')+1);
+
+
+				map<string,string>::iterator it;
+				for (it = _clients.begin(); it != _clients.end(); it++) {
+					IPPort ipp = parseIPPstr((*it).first);
+					if (ipp.ip.compare(t->getRemoteAddr()) != 0 || ipp.port != p) {
+						sendMsg(msg,ipp.ip,ipp.port);
+					}
+				}
+			}
 			cout << "`" + t->getRemoteAddr() + "`:";
 			print(msg);
 		}

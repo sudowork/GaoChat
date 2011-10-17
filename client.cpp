@@ -134,7 +134,8 @@ void Client::userInput() {
 							_peerip = ipp.ip;
 							_peerport = ipp.port;
 							_peernick = n;
-							print("Connection established");
+							print("Messaging with " + n + " enabled");
+							print("To stop messaging this person, use `/quit`");
 						} else {
 							print("Invalid peer name");
 						}
@@ -142,10 +143,19 @@ void Client::userInput() {
 						print("No argument supplied, the command is `/msg <NICK>`");
 					}
 				}
+
+				// Handle getpeers
+				if (str2cmd(input).cmd.compare(GETPEERS) == 0) {
+					char myport[5];
+					sprintf(myport,"%u",_port);
+					sendMsg(CMD_ESCAPE + GETPEERS + CMD_DELIM + myport,_server,S_PORT);
+					serverResp();
+				}
 			} else {
 				// Send message
-				// If p2p mode, prepend nick
-				if (_p2p) input = "\n" + _nick + ">" + input;
+				// If p2p mode, prepend @nick
+				if (_p2p) input = "\n@" + _nick + ">" + input;
+				else input = _port + ":\n" + _nick + ">" + input;
 				sendMsg(input,ip,port);
 			}
 
@@ -206,13 +216,15 @@ void Client::serverResp() {
 
 			// Handle bootstrap return
 			if (cmd.compare(BOOTSTRAP) == 0) {
+				// Clear old list of peers
+				_peers.erase(_peers.begin(),_peers.end());
 				// string is formatted as IP:PORT,NICK;
 				// explode string and insert into map of peers
 				vector<string> v = explode(msg.substr(msg.find(CMD_DELIM)+1),';');
 				// Enter each peer into map
 				for (int i = 0; i < v.size(); i++) {
 					vector<string> p = explode(v[i],',');
-					_peers.insert(pair<string,string>(p[0],p[1]));
+					_peers.insert(pair<string,string>(p[1],p[0]));
 				}
 				printAvailPeers();
 			}

@@ -18,7 +18,7 @@ class Server {
 	private:
 		unsigned short _port;				// Listening port
 		TCPSocket* _sock;					// Listening socket
-		std::map<std::string,std::string> _clients;	// Map. <NICK,IP:PORT>
+		std::map<std::string,std::string> _clients;	// Map. <IP:PORT,NICK>
 
 		int sendMsg(std::string input, std::string remoteAddr, unsigned short remotePort);
 };

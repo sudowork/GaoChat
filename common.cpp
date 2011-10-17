@@ -67,6 +67,8 @@ Command str2cmd(string input) {
 		// No argument for QUIT return quit w/ null argument
 	} else if ((c.cmd).compare(MSG) == 0) {
 		// Let client handle message argument
+	} else if (c.cmd.compare(GETPEERS) == 0) {
+
 	} else {
 		// If does not match a command, set to invalid command
 		c.isValid = false;

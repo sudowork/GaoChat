@@ -12,7 +12,6 @@ class Server {
 		unsigned short getPort();
 
 		bool start();						// Start server on default port
-		bool start(unsigned short port);	// Start server with custom port
 		bool isRunning();					// Returns boolean based on run status
 		void stop();						// Stop server
 	private:

@@ -97,8 +97,11 @@ This is the implementation used to create a client that can communicate with the
 
 ## Interfacing the Server and Client
 The server and client currently send data only as strings. If a message does not follow a valid command, then it is assumed to be plaintext and sent to the appropriate channel or peer by the server. If it is a command, then the server will process it and send a reply if necessary. Currently, only the `/bootstrap` command receives feedback from the server. It is in the format of:
+
     /bootstrap IP:PORT,NICKNAME;IP2:PORT2:NICKNAME2;
+
 In general, the steps needed to write a client capable of interfacing with the server is outlined below:
+
 * Run a loop waiting for user input
 * Establish an asynchronous send and receive through a given method
 	* Fork a process

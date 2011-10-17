@@ -60,6 +60,7 @@ using namespace std;
 
 		// Send stream
 		if (sockSend->send(msg,strlen(msg)) == -1) {
+			return -1;
 			/* TODO
 			 * ADD ERROR CHECKING
 			 */
@@ -67,6 +68,8 @@ using namespace std;
 
 		// Close socket
 		delete sockSend;
+
+		return 0;
 	}
 	
 	// Connects to server and requests list of peers from server

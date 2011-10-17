@@ -16,8 +16,7 @@ using namespace std;
 			// and set socket descriptor
 			if ((_sockDesc = ::socket(AF_INET, type, protocol)) == -1) {
 				// socket creation unsuccessful
-				print("error creating socket");
-				//////////////////////
+				error("Error creating socket");
 			}
 		#endif
 	}
@@ -27,7 +26,16 @@ using namespace std;
 	}
 
 	string Socket::getRemoteAddr() {
-		return "NEED TO ADD THIS IN";
+		sockaddr_in addr;
+		unsigned int addr_len = sizeof(addr);
+		if (getpeername(this->_sockDesc, (sockaddr *) &addr,(socklen_t *) &addr_len) < 0) {
+			error("Could not get address of peer");
+		}
+		return inet_ntoa(addr.sin_addr);
+	}
+
+	int Socket::getSockFD() {
+		return _sockDesc;
 	}
 
 	int Socket::connect(const string &remoteAddr, unsigned short remotePort) {

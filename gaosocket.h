@@ -30,6 +30,7 @@ class Socket {
 		unsigned short getLocalPort();
 		bool setLocalPort(unsigned short port);
 		bool setLocal(const std::string &addr, unsigned short port);
+		int getSockFD();
 
 		std::string getRemoteAddr();
 		bool setRemoteAddr(const std::string &addr);

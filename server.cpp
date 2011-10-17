@@ -10,14 +10,16 @@ using namespace std;
 
 	Server::Server() {
 		// Set default port
-		this->_port = S_PORT_LST;
+		this->_port = S_PORT;
 	}
 
 	Server::Server(unsigned short port) {
+		Server();
 		this->_port = port;
 	}
 
 	Server::~Server() {
+		delete this->_sock;
 	}
 
 	bool Server::start() {
@@ -32,7 +34,6 @@ using namespace std;
 		(this->_sock)->bindlisten(this->_port);
 		
 		// Start accepting connections
-		// TEMPORARY: ITERATIVE ACCEPT
 		for (;;) {
 			// Declare buffer and msgsize
 			char buffer[RECV_BUFFER_SIZE];
@@ -42,7 +43,6 @@ using namespace std;
 			// Create new socket to receive from
 			// Note: automatic cleanup upon exiting loop
 			TCPSocket* t = (this->_sock)->accept();
-			print("Message From Client `" + t->getRemoteAddr() + "`:");
 
 			// Receive and print
 			string msg = "";
@@ -51,10 +51,23 @@ using namespace std;
 				memset(buffer, 0, RECV_BUFFER_SIZE);
 			}
 
-			/* TODO
-			 * Process messages
-			 * Handle messages over 32 characters better
-			 */
+			// Check if command and handle appropriately
+			if (isCmd(msg)) {
+				Command cmd = str2cmd(msg);
+				// If bootstrap command
+				if (cmd.isValid && cmd.cmd.compare(BOOTSTRAP) == 0) {
+					// Remove previous entry if exists
+					_clients.erase(t->getRemoteAddr() + ":" + cmd.args[0]);
+					// Add connecting client to list of clients
+					_clients.insert(pair<string,string>(cmd.args[1],t->getRemoteAddr() + ":" + cmd.args[0]));
+					// Send updated list back to client
+					unsigned short port;
+					istringstream(cmd.args[0]) >> port;
+					sendMsg("/bootstrap " + map2str(_clients),t->getRemoteAddr(),port);
+				}
+			}
+
+			cout << "`" + t->getRemoteAddr() + "`:";
 			print(msg);
 		}
 	}
@@ -70,7 +83,23 @@ using namespace std;
 		delete this->_sock;
 	}
 
-	int setNonBlocking() {
+	int Server::sendMsg(string input, string remoteAddr, unsigned short remotePort) {
+		// Send stream 
+		// Create socket connection with server
+		TCPSocket* sockSend = new TCPSocket(remoteAddr,remotePort);
+
+		char *msg = (char *) malloc(input.length() * sizeof(char));
+		msg = (char *)input.c_str();
+
+		// Send stream
+		if (sockSend->send(msg,strlen(msg)) == -1) {
+			/* TODO
+			 * ADD ERROR CHECKING
+			 */
+		}
+
+		// Close socket
+		delete sockSend;
 	}
 
 //

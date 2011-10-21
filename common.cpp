@@ -78,6 +78,18 @@ Command str2cmd(string input) {
 	} else if (c.cmd.compare(GETPEERS) == 0) {
 	} else if (c.cmd.compare(RETPEERS) == 0) {
 	} else if (c.cmd.compare(ISCON) == 0) {
+	} else if (c.cmd.compare(FROM) == 0) {
+		// Make sure has sender
+		if (c.args.size() < 1) {
+			c.isValid = false;
+			return c;
+		}
+		string sender = c.args[0];
+		// Combine the rest of the arguments into a single message
+		c.args.clear();
+		c.args.push_back(sender);
+		c.args.push_back(input.substr(input.find(CMD_DELIM,input.find(CMD_DELIM)+1)+1));
+		//c.args.push_back(input.substr(input.find_first_not_of(CMD_ESCAPE + FROM + CMD_DELIM + sender + CMD_DELIM)));
 	} else {
 		// If does not match a command, set to invalid command
 		c.isValid = false;
@@ -117,7 +129,8 @@ bool isCmd(string input) {
 			cmd.compare(NICK) == 0 ||
 			cmd.compare(GETPEERS) == 0 ||
 			cmd.compare(RETPEERS) == 0 ||
-			cmd.compare(ISCON) == 0
+			cmd.compare(ISCON) == 0 ||
+			cmd.compare(FROM) == 0
 	        );
 }
 

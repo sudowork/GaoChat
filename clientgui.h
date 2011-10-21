@@ -32,6 +32,8 @@ class PeerTab;
 class CloseableTabWidget;
 class ClientGUI;
 
+QString msgToHtml(QString nick, QString text, bool fromPeer=false);
+
 class ClientGUI : public QWidget
 {
     Q_OBJECT
@@ -52,12 +54,12 @@ private:
 	QSocketNotifier *socketEvent;
 
 	GroupTab* getRootTab();
-	void createPeerTab();
+	PeerTab* newPeerTab(QString ipp,QString peer);
 private slots:
     void quit();
     void serverConnect();
 	void processMsg();
-	void newPeerTab(QListWidgetItem* peer);
+	void startPeerChat(QListWidgetItem* peer);
 };
 
 
@@ -72,16 +74,15 @@ public:
     bool eventFilter(QObject *watched, QEvent *e);
 	void appendChat(QString html);
 	void passClient(Client *c);
-private:
+protected:
     QTextEdit *chatInput;
     QTextBrowser *chat;
 
-    void submitChatInput();
-	QString msgToHtml(QString nick, QString text);
-protected:
 	QSplitter *outputSplitter;
 	QSplitter *inputSplitter;
 	Client *client;
+
+    void submitChatInput();
 private slots:
 };
 
@@ -94,6 +95,7 @@ public:
 	GroupTab(QWidget *parent=0);
 	//~GroupTab();
 	void consolidatePeers(std::map<std::string,std::string> peers);
+	QString peerFromList(QString nick);
 private:
 	QListWidget *online;
 };
@@ -104,9 +106,24 @@ class PeerTab : public Tab {
 	Q_OBJECT
 
 public:
+	PeerTab(QString ipp, QString peer, QWidget *parent=0);
 	//~PeerTab();
+
+    bool eventFilter(QObject *watched, QEvent *e);
+
+	QString ip();
+	void ip(QString ip);
+	unsigned short port();
+	void port(unsigned short port);
+	QString peer();
+	void peer(QString peer);
 private:
-	QString peerNick;
+	QString _ip;
+	unsigned short _port;
+	QString _peer;
+
+	// Override Tab
+	void submitChatInput();
 private slots:
 };
 

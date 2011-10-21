@@ -88,11 +88,15 @@ void Client::initListen() {
 }
 
 int Client::sendServerMsg(string input) {
-	// Set send address and port based on if in conversation
-	string ip = _server; unsigned short port = _serverPort;
-	//string ip = (_p2p) ? _peerip : _server;
-	//unsigned short port = (_p2p) ? _peerport : _serverPort;
+	return sendChatMsg(input,_server,_serverPort);
+}
 
+int Client::sendPeerMsg(string input, string nick) {
+	IPPort ipp = parseIPPstr(_peers.find(nick)->second);
+	return sendChatMsg(input,ipp.ip,ipp.port);
+}
+
+int Client::sendChatMsg(string input, string ip, unsigned short port) {
 	// Check for command
 	if (isCmd(input)) {
 		Command c = str2cmd(input);

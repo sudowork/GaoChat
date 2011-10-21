@@ -49,6 +49,7 @@ class Client {
 
 		void initListen();						// Creates listening socket
 		int sendMsg(std::string input, std::string remoteAddr, unsigned short remotePort);	// Sends message to server or peer
+		int sendChatMsg(std::string input, std::string remoteAddr, unsigned short remotePort);	// Sends message to server or peer
 		void printAvailPeers();					// Prints list of available peers
 };
 

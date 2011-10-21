@@ -127,6 +127,7 @@ void ClientGUI::serverConnect() {
 
 void ClientGUI::processMsg() {
 	string msg = client->readSocket();
+
 	// If command, perform action
 	//if (isCmd(msg) && (str2cmd(msg)).isValid) {
 	if (isCmd(msg)) {
@@ -134,6 +135,28 @@ void ClientGUI::processMsg() {
 		// Split cmd
 		//string cmd = msg.substr(1,msg.find(CMD_DELIM)-1);
 		Command c = str2cmd(msg);
+
+		// Check if from peer
+		if (c.cmd.compare(FROM) == 0) {
+			QString nick = QString::fromStdString(c.args[0]);
+			QString peerMsg = QString::fromStdString(c.args[1]);
+			map<QString,Tab*>::iterator it;
+			// See if tab is open
+			if ((it = tabPt->find(nick)) != tabPt->end()) {
+				// Append peer's message
+				it->second->appendChat(msgToHtml(nick,peerMsg,true));
+			} else {
+				// Open new tab
+				// First, ensure that peer is in your peer list
+				QString ipp = getRootTab()->peerFromList(nick);
+				if (!ipp.isNull()) {
+					// Make new peer tab and pass client
+					PeerTab *pt = newPeerTab(ipp,nick);
+					pt->passClient(client);
+					pt->appendChat(msgToHtml(nick,peerMsg,true));
+				}
+			}
+		}
 
 		// Handle bootstrap return
 		if (c.cmd.compare(RETPEERS) == 0) {
@@ -159,20 +182,32 @@ void ClientGUI::processMsg() {
 	}
 }
 
-void ClientGUI::newPeerTab(QListWidgetItem* peer) {
+PeerTab* ClientGUI::newPeerTab(QString ipp, QString peerNick) {
+	// If tab is open, give it focus
+	if (tabPt->find(peerNick) != tabPt->end()) {
+		tabs->setCurrentIndex(tabs->indexOf(tabPt->find(peerNick)->second));
+		return (PeerTab *)tabPt->find(peerNick)->second;
+	} else {
+		// Create new tab, pass it the client, and keep track of its pointer
+		PeerTab *pt = new PeerTab(ipp,peerNick);
+		pt->passClient(client);
+		tabPt->insert(std::pair<QString,Tab*>(peerNick,pt));
+
+		// Add tab to tab bar
+		tabs->addTab(pt,peerNick);
+		return pt;
+	}
+}
+
+void ClientGUI::startPeerChat(QListWidgetItem* peer) {
 	// Make sure you're not trying to chat with yourself
 	if (peer->text().toStdString().compare(client->nick()) != 0) {
 		// If tab is open, give it focus
 		if (tabPt->find(peer->text()) != tabPt->end()) {
 			tabs->setCurrentIndex(tabs->indexOf(tabPt->find(peer->text())->second));
 		} else {
-			// Create new tab, pass it the client, and keep track of its pointer
-			PeerTab *pt = new PeerTab;
-			pt->passClient(client);
-			tabPt->insert(std::pair<QString,Tab*>(peer->text(),pt));
-
-			// Add tab to tab bar
-			tabs->addTab(pt,peer->text());
+			// Create new tab and add to tab bar
+			PeerTab* pt = newPeerTab(peer->toolTip(),peer->text());
 			// Give tab focus
 			tabs->setCurrentIndex(tabs->indexOf(pt));
 		}
@@ -242,7 +277,7 @@ bool Tab::eventFilter(QObject *dist, QEvent *event) {
         if ((e->key() == Qt::Key_Return)) {
             // Make sure enter is not escaped w/ alt modifier
             if (e->modifiers() != Qt::AltModifier) {
-		        submitChatInput();
+		        this->submitChatInput();
 				return true;
             } else {
                 // if alt is used, then just insert a return
@@ -274,14 +309,6 @@ void Tab::appendChat(QString html) {
     chat->moveCursor(QTextCursor::End);
 }
 
-QString Tab::msgToHtml(QString nick,QString text) {
-	QString html;
-	html = "<div><span style=\"color:#FF0000;\">" +
-	        nick + ":&nbsp;</span>" +
-	        "<span>" + text + "</span></div>";
-	html.replace(QRegExp("\n"),"<br />");
-	return html;
-}
 
 
 GroupTab::GroupTab(QWidget *parent) : Tab(parent){
@@ -299,7 +326,7 @@ GroupTab::GroupTab(QWidget *parent) : Tab(parent){
     onlineContainer->setLayout(onlineContainerLayout);
 
 	// Enable double clicking on list items to message peer
-	connect(online,SIGNAL(itemDoubleClicked(QListWidgetItem*)),parent,SLOT(newPeerTab(QListWidgetItem*)));
+	connect(online,SIGNAL(itemDoubleClicked(QListWidgetItem*)),parent,SLOT(startPeerChat(QListWidgetItem*)));
 
     outputSplitter->addWidget(onlineContainer);
     outputSplitter->setStretchFactor(0,7);
@@ -311,6 +338,10 @@ void GroupTab::consolidatePeers(map<string,string> peers) {
 	map<string,string>::iterator it;
 	for (it=peers.begin(); it != peers.end(); it++) {
 		QListWidgetItem *item = new QListWidgetItem(QString::fromStdString(it->first));
+
+		// Set tooltip as IP:Port
+		item->setToolTip(QString::fromStdString(it->second));
+
 		online->addItem(item);
 		// Check if it's you
 		if (client->nick().compare(it->first) == 0) {
@@ -319,6 +350,58 @@ void GroupTab::consolidatePeers(map<string,string> peers) {
 	}
 }
 
+QString GroupTab::peerFromList(QString nick) {
+	QList<QListWidgetItem*> items = online->findItems(nick,Qt::MatchExactly);
+	if (items.size() == 1) {
+		return items[0]->toolTip();
+	} else {
+		return QString();
+	}
+}
+
+
+
+PeerTab::PeerTab(QString ipp, QString peer, QWidget *parent) : Tab(parent) {
+	this->_ip = ipp.split(":").at(0);
+	this->_port = ipp.split(":").at(1).toUShort();
+	this->_peer = peer;
+	chatInput->installEventFilter(this);
+}
+
+void PeerTab::submitChatInput() {
+	string fromCmd = CMD_ESCAPE + FROM + CMD_DELIM + client->nick() + CMD_DELIM;
+	QString input =  QString::fromStdString(fromCmd) + chatInput->toPlainText();
+	QString inputHtml = msgToHtml(QString::fromStdString(client->nick()),chatInput->toPlainText());
+
+	client->sendPeerMsg(string(input.toUtf8().constData()),_peer.toStdString());
+	appendChat(inputHtml);
+
+    // Clear text input
+    chatInput->clear();
+}
+
+bool PeerTab::eventFilter(QObject *dist, QEvent *event) {
+    // Check for keypress
+    if (event->type() == QEvent::KeyPress) {
+        // Cast to keyEvent
+        QKeyEvent *e = static_cast<QKeyEvent *>(event);
+        // Check if return is pressed
+        if ((e->key() == Qt::Key_Return)) {
+            // Make sure enter is not escaped w/ alt modifier
+            if (e->modifiers() != Qt::AltModifier) {
+		        this->submitChatInput();
+				return true;
+            } else {
+                // if alt is used, then just insert a return
+				chatInput->insertPlainText(QString("\n"));
+				chatInput->ensureCursorVisible();
+				return true;
+            }
+        }
+        //chatInput->document()->documentLayout()->documentSize().toSize();
+    }
+    return false;
+}
 
 
 CloseableTabWidget::CloseableTabWidget(map<QString,Tab*> *t, QWidget* parent) : QTabWidget(parent) {
@@ -332,8 +415,20 @@ CloseableTabWidget::CloseableTabWidget(map<QString,Tab*> *t, QWidget* parent) : 
 void CloseableTabWidget::closeTab(int i) {
 	// Make sure it's not the server chat window
 	if (i != this->indexOf(tabPt->find(ROOTTAB)->second)) {
-		// Erase from list of Tab pointers so it can be opened again
+		// Erase from list of Tab pointers so it can be opened agaij
 		tabPt->erase(this->tabText(i));
 		this->removeTab(i);
 	}
+}
+
+
+
+QString msgToHtml(QString nick,QString text, bool frompeer) {
+	QString html;
+	QString color = (frompeer) ? "#0000FF" : "#FF0000";
+	html = "<div><span style=\"color:" + color + ";\">" +
+			nick + ":&nbsp;</span>" +
+	        "<span>" + text + "</span></div>";
+	html.replace(QRegExp("\n"),"<br />");
+	return html;
 }

@@ -24,14 +24,21 @@ To install, simply run the make all. No configuration is necessary since only \*
 * `/getpeers` Requests an updated peer list
 
 ### Extra features
-* Multiple clients (99) can be run on one computer (iterative port)
+* Multiple clients (99) can be run on one host (iterative port)
 * The default chat is a group chatroom
 * Each client features a unique nickname (if taken, then randomly assigned)
 * Private messaging (one on one chat)
 	* `/msg <nick>` command
 	* Double clicking username in online list
+	* Multiple one on one chats
+* GUI for client
+	* Tabbed messaging
+	* Group chat room with list of online peers
+	* Push notification of messages
+	* Colorized usernames
 
 ### Future features
+* Improve validation
 * Multiple group chats
 * More commands
 * Ability to choose between UDP or TCP

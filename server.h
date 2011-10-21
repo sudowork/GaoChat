@@ -24,7 +24,9 @@ class Server {
 		int sendMsg(std::string input, std::string remoteAddr, unsigned short remotePort);
 		int blastMsg(std::string msg);
 		bool removeClientByNick(std::string nick);
+		bool removeClientByIPP(std::string ipp);
 		void addClient(std::string ipp, std::string nick);
+		void sendClientsList();
 };
 
 #endif

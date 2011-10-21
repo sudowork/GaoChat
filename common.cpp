@@ -52,7 +52,7 @@ Command str2cmd(string input) {
 	// IF tree for all commands (ugly I know)
 	if ((c.cmd).compare(BOOTSTRAP) == 0) {
 		// Check if only one argument, and is number from 1024-65535
-		if (c.args.size() != 2) {
+		if (c.args.size() != 1) {
 			c.isValid = false;
 			return c;
 		} else {
@@ -66,7 +66,15 @@ Command str2cmd(string input) {
 	} else if ((c.cmd).compare(QUIT) == 0) {
 		// No argument for QUIT return quit w/ null argument
 	} else if ((c.cmd).compare(MSG) == 0) {
-		// Let client handle message argument
+		if (c.args.size() != 1) {
+			c.isValid = false;
+			return c;
+		}
+	} else if ((c.cmd).compare(NICK) == 0) {
+		if (c.args.size() != 1) {
+			c.isValid = false;
+			return c;
+		}
 	} else if (c.cmd.compare(GETPEERS) == 0) {
 	} else if (c.cmd.compare(RETPEERS) == 0) {
 	} else if (c.cmd.compare(ISCON) == 0) {
@@ -95,7 +103,23 @@ vector<string> explode(string str, char delim) {
 }
 
 bool isCmd(string input) {
-	return input[0] == CMD_ESCAPE;
+	// Check if escape character
+	if (input[0] != CMD_ESCAPE) return false;
+
+	// Get command
+	string cmd = input.substr(1,input.find(CMD_DELIM)-1);
+	if (cmd.compare(BOOTSTRAP) == 0) print ("test");
+
+	// Make sure it's one of the defined commands
+	return (
+			cmd.compare(BOOTSTRAP) == 0 ||
+			cmd.compare(QUIT) == 0 ||
+			cmd.compare(MSG) == 0 ||
+			cmd.compare(NICK) == 0 ||
+			cmd.compare(GETPEERS) == 0 ||
+			cmd.compare(RETPEERS) == 0 ||
+			cmd.compare(ISCON) == 0
+	        );
 }
 
 string c2substr(char *c, unsigned int start, unsigned int n) {

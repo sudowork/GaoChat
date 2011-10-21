@@ -3,10 +3,17 @@
 
 using std::string;
 using std::vector;
+using std::map;
 
 ClientGUI::ClientGUI(QWidget *parent)
     : QWidget(parent)
 {
+	/**********
+	 * Initialize NULL pointer
+	 **********/
+
+	client = NULL;
+
     /**********
      * Build base application window
      **********/
@@ -14,15 +21,15 @@ ClientGUI::ClientGUI(QWidget *parent)
     setWindowTitle("GaoChat Client");
 
     // Will contain chat window and list of online peers
-    QSplitter *outputSplitter = new QSplitter();
+    QSplitter *outputSplitter = new QSplitter;
     // Will split the outputSplitter from the input line
-    QSplitter *inputSplitter = new QSplitter();
+    QSplitter *inputSplitter = new QSplitter;
     inputSplitter->setOrientation(Qt::Vertical);
     // Contains the top portion (output) and bottom (input)
-    QVBoxLayout *mainLayout = new QVBoxLayout();
+    QLayout *groupLayout = new QVBoxLayout;
 
     // Chat input
-    chatInput = new QTextEdit();
+    chatInput = new QTextEdit;
     chatInput->setMinimumHeight(20);
     chatInput->setMaximumHeight(100);
     chatInput->installEventFilter(this);
@@ -37,9 +44,9 @@ ClientGUI::ClientGUI(QWidget *parent)
     inputSplitter->setCollapsible(1,false);
 
     // Populate chat container
-    QWidget *chatContainer = new QWidget();
-    QVBoxLayout *chatContainerLayout = new QVBoxLayout();
-    chat = new QTextBrowser();
+    QWidget *chatContainer = new QWidget;
+    QLayout *chatContainerLayout = new QVBoxLayout;
+    chat = new QTextBrowser;
     chatContainerLayout->addWidget(new QLabel("Chat:"));
     chatContainerLayout->addWidget(chat);
     chatContainerLayout->setMargin(0);
@@ -47,9 +54,10 @@ ClientGUI::ClientGUI(QWidget *parent)
     chatContainer->setLayout(chatContainerLayout);
 
     // Populate online list container
-    QWidget *onlineContainer = new QWidget();
-    QVBoxLayout *onlineContainerLayout = new QVBoxLayout();
-    online = new QListWidget();
+    QWidget *onlineContainer = new QWidget;
+    QLayout *onlineContainerLayout = new QVBoxLayout();
+    online = new QListWidget;
+	online->setSortingEnabled(true);
     onlineContainer->setMinimumWidth(50);
     onlineContainer->setMaximumWidth(175);
     onlineContainerLayout->addWidget(new QLabel("Online:"));
@@ -64,12 +72,25 @@ ClientGUI::ClientGUI(QWidget *parent)
     outputSplitter->setStretchFactor(0,7);
     outputSplitter->setStretchFactor(1,3);
 
-    mainLayout->addWidget(inputSplitter);
-    mainLayout->setMargin(10);
-    mainLayout->setSpacing(5);
+	// Construct tabs
+	tabs = new QTabWidget;
+	tabs->setDocumentMode(true);
+	QWidget *groupChat = new QWidget;
 
-    setLayout(mainLayout);
+    groupLayout->addWidget(inputSplitter);
+    groupLayout->setMargin(10);
+    groupLayout->setSpacing(5);
 
+	groupChat->setLayout(groupLayout);
+
+	tabs->addTab(groupChat,"Group Chat");
+
+	QLayout *mainLayout = new QVBoxLayout;
+	mainLayout->setMargin(0);
+	mainLayout->setSpacing(0);
+	mainLayout->addWidget(tabs);
+
+	setLayout(mainLayout);
 
     /**********
      * Dialog box prompting for server,port and nickname
@@ -79,13 +100,13 @@ ClientGUI::ClientGUI(QWidget *parent)
     configPrompt->setFixedSize(configPrompt->sizeHint());
     configPrompt->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
 
-    QVBoxLayout *serverSettings = new QVBoxLayout();
+    QLayout *serverSettings = new QVBoxLayout;
 
-    serverAddr = new QLineEdit();
+    serverAddr = new QLineEdit;
     serverAddr->setFixedWidth(125);
     serverAddr->setText("127.0.0.1");
 
-    serverPort = new QSpinBox();
+    serverPort = new QSpinBox;
     serverPort->setMinimum(1024);
     serverPort->setMaximum(65535);
     serverPort->setValue(S_PORT);
@@ -99,9 +120,9 @@ ClientGUI::ClientGUI(QWidget *parent)
     serverSettings->setSpacing(1);
     serverSettings->setMargin(0);
 
-    QVBoxLayout *userSettings = new QVBoxLayout();
+    QLayout *userSettings = new QVBoxLayout;
 
-    nick = new QLineEdit();
+    nick = new QLineEdit;
 	nick->setText("sudowork");
     userSettings->addWidget(new QLabel("Nickname:"));
     userSettings->addWidget(nick);
@@ -111,7 +132,7 @@ ClientGUI::ClientGUI(QWidget *parent)
     QPushButton *quit = new QPushButton("Quit");
     connect(quit,SIGNAL(clicked()),this,SLOT(quit()));
 
-    QVBoxLayout *configLayout = new QVBoxLayout();
+    QVBoxLayout *configLayout = new QVBoxLayout;
     configLayout->addLayout(serverSettings);
     configLayout->addLayout(userSettings);
     configLayout->addWidget(save);
@@ -180,8 +201,12 @@ void ClientGUI::saveSettings() {
     client->nick(nick->text().replace(QRegExp("[\\s\t]"),"").toStdString());
 	client->bootstrap();
 
+	// Connect listening socket event to action
 	socketEvent = new QSocketNotifier(client->sockFd(), QSocketNotifier::Read);
 	connect(socketEvent,SIGNAL(activated(int)),this,SLOT(processMsg()));
+
+	// Rename server title
+	tabs->setTabText(0,serverAddr->text());
 
     configPrompt->accept();
 }
@@ -191,7 +216,7 @@ void ClientGUI::processMsg() {
 	// If command, perform action
 	//if (isCmd(msg) && (str2cmd(msg)).isValid) {
 	if (isCmd(msg)) {
-		print(msg);
+		print("Response: " + msg);
 		// Split cmd
 		string cmd = msg.substr(1,msg.find(CMD_DELIM)-1);
 
@@ -203,15 +228,26 @@ void ClientGUI::processMsg() {
 			// explode command argument and insert into map of peers
 			vector<string> v = explode(msg.substr(msg.find(CMD_DELIM)+1),';');
 			// Enter each peer into map
-			for (int i = 0; i < v.size(); i++) {
+			for (unsigned int i = 0; i < v.size(); i++) {
 				vector<string> p = explode(v[i],',');
 				client->addPeer(p[0],p[1]);
-				online->addItem(QString::fromStdString(p[1]));
+				consolidatePeers(client->getPeers());
 			}
 		}
 	} else {
 		appendChat(QString::fromStdString(msg));
 	}
+}
+
+void ClientGUI::consolidatePeers(map<string,string> peers) {
+	online->clear();
+	map<string,string>::iterator it;
+	for (it=peers.begin(); it != peers.end(); it++) {
+		online->addItem(QString::fromStdString(it->first));
+	}
+}
+
+void ClientGUI::msgPeer(QString nick) {
 }
 
 QString ClientGUI::msgToHtml(QString nick,QString text) {

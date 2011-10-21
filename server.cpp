@@ -50,8 +50,6 @@ using namespace std;
 				memset(buffer, 0, RECV_BUFFER_SIZE);
 			}
 
-			print(msg);
-
 			// Check if command and handle appropriately
 			if (isCmd(msg)) {
 				Command cmd = str2cmd(msg);
@@ -63,25 +61,22 @@ using namespace std;
 					string ippstr = t->getRemoteAddr() + ":" + cmd.args[0];
 					addClient(ippstr,cmd.args[1]);
 
-					// Send updated list back to all clients
-					unsigned short port;
-					istringstream(cmd.args[0]) >> port;
-					blastMsg(CMD_ESCAPE + RETPEERS + CMD_DELIM + map2str(_clients_IP_N));
+					// Update clients' peer lists
+					sendClientsList();
 				}
 				// If quit, then remove client from list of clients
 				if (cmd.isValid && cmd.cmd.compare(QUIT) == 0 ){
-				//	print(cmd.args[0] + " QUIT");
 					removeClientByNick(cmd.args[0]);
+					sendClientsList();
 				}
 
 				// If getpeers, send client list
 				if (cmd.isValid && cmd.cmd.compare(GETPEERS) == 0) {
-					unsigned short port;
-					istringstream(cmd.args[0]) >> port;
-					sendMsg("/bootstrap " + map2str(_clients_IP_N),t->getRemoteAddr(),port);
+					sendClientsList();
 				}
 			} else {
 				// Blast message to all peers - originator
+				/*
 				unsigned int p;
 				istringstream(msg.substr(0,msg.find(':'))) >> p;
 				msg.erase(0,msg.find(':')+1);
@@ -92,7 +87,7 @@ using namespace std;
 					if (ipp.ip.compare(t->getRemoteAddr()) != 0 || ipp.port != p) {
 						sendMsg(msg,ipp.ip,ipp.port);
 					}
-				}
+				}*/
 			}
 			cout << "`" + t->getRemoteAddr() + "`:";
 			print(msg);
@@ -152,9 +147,48 @@ using namespace std;
 		return false;
 	}
 
+	bool Server::removeClientByIPP(string ipp) {
+		// Find client by ip address and port if exists
+		map<string,string>::iterator it = _clients_IP_N.find(ipp);
+		if (it != _clients_IP_N.end()
+				&& (_clients_N_IP.find(it->second)->second.compare(it->first) == 0)) {
+			_clients_IP_N.erase(ipp);
+			_clients_N_IP.erase(it->second);
+			return true;
+		}
+		return false;
+	}
+
 	void Server::addClient(string ipp, string nick) {
-		_clients_IP_N.insert(pair<string,string>(ipp,nick));
-		_clients_N_IP.insert(pair<string,string>(nick,ipp));
+		unsigned short itNum = 1;
+		string newNick = nick;
+
+		// Check if IP and port already exist
+		// If exist, then assume nickname change
+		if (_clients_IP_N.find(ipp) != _clients_IP_N.end()) {
+			// Remove old nickname
+			removeClientByIPP(ipp);
+		}
+
+		// Check if nickname taken
+		print(map2str(_clients_N_IP));
+		while (_clients_N_IP.find(newNick) != _clients_N_IP.end()) {
+			// If taken, append underscore and iterative number
+			print("Nickname `" + nick + "` taken");
+			char *temp;
+			sprintf(temp,"%u",itNum);
+			newNick = nick + "_" + temp;
+		}
+		
+		// Add ip, port, and name to map
+		_clients_IP_N.insert(pair<string,string>(ipp,newNick));
+		_clients_N_IP.insert(pair<string,string>(newNick,ipp));
+	}
+
+	void Server::sendClientsList() {
+		// Send updated list back to all clients
+		print("Sending client list to all clients");
+		blastMsg(CMD_ESCAPE + RETPEERS + CMD_DELIM + map2str(_clients_IP_N));
 	}
 
 //

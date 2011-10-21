@@ -18,6 +18,7 @@ class Client {
 		int listenPID() const;
 		void listenPID(int pid);
 		int sockFd() const;
+		std::map<std::string,std::string>  getPeers();		// Map of peers, <NICK,IP:PORT>
 
 		// Member functions
 		bool isValidIP(std::string ip);			// Checks if IP address is valid

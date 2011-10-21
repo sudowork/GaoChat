@@ -19,6 +19,7 @@
 #include <QString>
 #include <QAbstractTextDocumentLayout>
 #include <QTextStream>
+#include <QTabWidget>
 #include <QSocketNotifier>
 #include <QtGui/QMainWindow>
 #include "gaosocket.h"
@@ -42,15 +43,18 @@ private:
     QSpinBox *serverPort;
     QLineEdit *nick;
     QDialog *configPrompt;
+	QTabWidget *tabs;
 
 	QSocketNotifier *socketEvent;
 
 	QString msgToHtml(QString nick, QString text);
 	void appendChat(QString html);
+	void consolidatePeers(std::map<std::string,std::string> peers);
 private slots:
     void quit();
     void saveSettings();
 	void processMsg();
+	void msgPeer(QString nick);
 };
 
 #endif // CLIENTGUI_H

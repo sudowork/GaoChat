@@ -24,10 +24,12 @@ To install, simply run the make all. No configuration is necessary since only \*
 * `/getpeers` Requests an updated peer list
 
 ### Extra features
-* Multiple clients can be run on one computer
+* Multiple clients (99) can be run on one computer (iterative port)
 * The default chat is a group chatroom
-* Each client features a nickname
-* It is possible to start private messaging a user, by using the `/msg <nick>` command
+* Each client features a unique nickname (if taken, then randomly assigned)
+* Private messaging (one on one chat)
+	* `/msg <nick>` command
+	* Double clicking username in online list
 
 ### Future features
 * Multiple group chats
@@ -36,6 +38,8 @@ To install, simply run the make all. No configuration is necessary since only \*
 * NAT traversal via UDP holepunching
 * Windows compatibility
 * Allow server to be given direct user input to control server
+* User statuses
+* User timeout
 
 ### Contact
 You can reach me at `kevin<dot>gao<at>duke<dot>edu`

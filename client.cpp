@@ -38,6 +38,7 @@ void Client::nick(string nick) {								// Setter for nick
 int Client::listenPID() const { return _listenPID; }
 void Client::listenPID(int pid) { _listenPID = pid; }
 int Client::sockFd() const { return _sock->sockFd(); }
+map<string,string> Client::getPeers() { return _peers; }
 
 // Member functions
 bool Client::isValidIP(string ip) {
@@ -94,55 +95,47 @@ int Client::sendServerMsg(string input) {
 
 	// Check for command
 	if (isCmd(input)) {
+		Command c = str2cmd(input);
+
 		// Stop taking input if quit command is given
-		if ((str2cmd(input).cmd).compare(QUIT) == 0) {
+		if (c.isValid && c.cmd.compare(QUIT) == 0) {
 			// Inform remote side that quitting
 			return sendMsg(CMD_ESCAPE + QUIT + CMD_DELIM + _nick,ip,port);
-			// Check if in P2P conversation
-			if (_p2p) {
-				// Just leave conversation
-				_p2p = false;
-				print("Leaving conversation");
-			} else {
-				// Quit program
-				// Kill child PID
-				if (_listenPID > 0) {
-					kill(_listenPID,1);
-				}
-			}
 		}
 
 		// Handle message command
-		if (str2cmd(input).cmd.compare(MSG) == 0) {
-			// Check for argument
-			if (input.find(CMD_DELIM) < input.npos) {
-				// Get nickname, lookup in peer map, and establish connection
-				string n = input.substr(input.find(CMD_DELIM)+1);
-				if (_peers.find(n) != _peers.end()) {
-					// Peer in peer map
-					// Establish send with peer
-					print("Establishing conversation with " + n);
-					// Set P2P flag and set peer IP and port
-					_p2p = true;
-					IPPort ipp = parseIPPstr(_peers[n]);
-					_peerip = ipp.ip;
-					_peerport = ipp.port;
-					_peernick = n;
-					print("Messaging with " + n + " enabled");
-					print("To stop messaging this person, use `/quit`");
-				} else {
-					print("Invalid peer name");
-				}
+		if (c.isValid && c.cmd.compare(MSG) == 0) {
+			// Get nickname, lookup in peer map, and establish connection
+			string n = c.args[0];
+			if (_peers.find(n) != _peers.end()) {
+				// Peer in peer map
+				// Establish send with peer
+				print("Establishing conversation with " + n);
+				// Set P2P flag and set peer IP and port
+				_p2p = true;
+				IPPort ipp = parseIPPstr(_peers[n]);
+				_peerip = ipp.ip;
+				_peerport = ipp.port;
+				_peernick = n;
+				print("Messaging with " + n + " enabled");
+				print("To stop messaging this person, use `/quit`");
 			} else {
-				print("No argument supplied, the command is `/msg <NICK>`");
+				print("Invalid peer name");
 			}
 		}
 
 		// Handle getpeers
-		if (str2cmd(input).cmd.compare(GETPEERS) == 0) {
+		if (c.isValid && c.cmd.compare(GETPEERS) == 0) {
 			char myport[5];
 			sprintf(myport,"%u",_port);
 			return sendMsg(CMD_ESCAPE + GETPEERS + CMD_DELIM + myport,_server,_serverPort);
+		}
+
+		// Handle change nickname
+		if (c.isValid && c.cmd.compare(NICK) == 0) {
+			char myport[5];
+			sprintf(myport,"%u",_port);
+			return sendMsg(CMD_ESCAPE + BOOTSTRAP + CMD_DELIM + myport + CMD_DELIM + c.args[0],_server,_serverPort);
 		}
 	}
 	return sendMsg(input,ip,port);

@@ -55,8 +55,6 @@ using namespace std;
 				Command cmd = str2cmd(msg);
 				// If bootstrap command
 				if (cmd.isValid && cmd.cmd.compare(BOOTSTRAP) == 0) {
-					// Remove previous entry if exists
-					removeClientByNick(cmd.args[1]);
 					// Add connecting client to list of clients
 					string ippstr = t->getRemoteAddr() + ":" + cmd.args[0];
 					addClient(ippstr,cmd.args[1]);
@@ -172,6 +170,8 @@ using namespace std;
 
 		// Check if nickname taken
 		print(map2str(_clients_N_IP));
+		if (_clients_N_IP.find(newNick) != _clients_N_IP.end())
+			print("taken");
 		while (_clients_N_IP.find(newNick) != _clients_N_IP.end()) {
 			// If taken, append underscore and iterative number
 			print("Nickname `" + nick + "` taken");
@@ -185,10 +185,20 @@ using namespace std;
 		_clients_N_IP.insert(pair<string,string>(newNick,ipp));
 	}
 
-	void Server::sendClientsList() {
+	int Server::sendClientsList() {
 		// Send updated list back to all clients
 		print("Sending client list to all clients");
-		blastMsg(CMD_ESCAPE + RETPEERS + CMD_DELIM + map2str(_clients_IP_N));
+
+		string mapStr = CMD_DELIM + map2str(_clients_IP_N);
+		string baseMsg = CMD_ESCAPE + RETPEERS + CMD_DELIM;
+
+		map<string,string>::iterator it;
+		for (it = _clients_IP_N.begin(); it != _clients_IP_N.end(); it++) {
+			IPPort ipp = parseIPPstr((*it).first);
+			if (sendMsg(baseMsg + it->second + mapStr,ipp.ip,ipp.port) < 0)
+				return -1;
+		}
+		return 1;
 	}
 
 //

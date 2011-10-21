@@ -26,7 +26,7 @@ class Server {
 		bool removeClientByNick(std::string nick);
 		bool removeClientByIPP(std::string ipp);
 		void addClient(std::string ipp, std::string nick);
-		void sendClientsList();
+		int sendClientsList();
 };
 
 #endif

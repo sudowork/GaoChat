@@ -218,15 +218,21 @@ void ClientGUI::processMsg() {
 	if (isCmd(msg)) {
 		print("Response: " + msg);
 		// Split cmd
-		string cmd = msg.substr(1,msg.find(CMD_DELIM)-1);
+		//string cmd = msg.substr(1,msg.find(CMD_DELIM)-1);
+		Command c = str2cmd(msg);
 
 		// Handle bootstrap return
-		if (cmd.compare(RETPEERS) == 0) {
+		if (c.cmd.compare(RETPEERS) == 0) {
+			// Reset nickname in case nickname was taken already
+			client->nick(c.args[0]);
+
 			// Clear old list of peers
 			client->clearPeers();
+
+			// Consolidate and add new peers
 			// string is formatted as IP:PORT,NICK;
-			// explode command argument and insert into map of peers
-			vector<string> v = explode(msg.substr(msg.find(CMD_DELIM)+1),';');
+			// explode map argument and insert into map of peers
+			vector<string> v = explode(c.args[1],';');
 			// Enter each peer into map
 			for (unsigned int i = 0; i < v.size(); i++) {
 				vector<string> p = explode(v[i],',');
@@ -243,7 +249,12 @@ void ClientGUI::consolidatePeers(map<string,string> peers) {
 	online->clear();
 	map<string,string>::iterator it;
 	for (it=peers.begin(); it != peers.end(); it++) {
-		online->addItem(QString::fromStdString(it->first));
+		QListWidgetItem *item = new QListWidgetItem(QString::fromStdString(it->first));
+		online->addItem(item);
+		// Check if it's you
+		if (client->nick().compare(it->first) == 0) {
+			item->setBackgroundColor(QColor(255,0,0,15));
+		}
 	}
 }
 

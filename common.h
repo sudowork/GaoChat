@@ -21,11 +21,13 @@
 #define CMD_ESCAPE '/'			// Escape character for command
 #define CMD_DELIM ' '			// Delimiter for command
 
-static const std::string BOOTSTRAP	= "bootstrap";	// Requests peer list from server
-static const std::string QUIT		= "quit";		// Quits client
-static const std::string NICK		= "nick";		// Sets client
-static const std::string MSG		= "msg";		// Messages peer
-static const std::string GETPEERS	= "getpeers";	// Gets updated list of peers
+static const std::string BOOTSTRAP	= "bootstrap";		// Requests peer list from server
+static const std::string QUIT		= "quit";			// Quits client
+static const std::string NICK		= "nick";			// Sets client
+static const std::string MSG		= "msg";			// Messages peer
+static const std::string GETPEERS	= "getpeers";		// Gets updated list of peers
+static const std::string RETPEERS	= "peers";			// Gets updated list of peers
+static const std::string ISCON		= "isconnected";	// Pings server to see if connected
 
 struct Command {
 	bool isValid;			// checks if valid command

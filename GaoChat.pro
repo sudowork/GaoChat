@@ -9,8 +9,21 @@ QT       += core gui
 TARGET = GaoChat
 TEMPLATE = app
 
+MAKEFILE = Makefile.gui
 
 SOURCES += main.cpp\
-        clientgui.cpp
+        clientgui.cpp\
+        client.cpp\
+        gaosocket.cpp\
+        common.cpp
 
-HEADERS  += clientgui.h
+HEADERS  += clientgui.h\
+        client.h\
+        gaosocket.h\
+        common.h
+
+DESTDIR = bin
+OBJECTS_DIR = bin/obj
+MOC_DIR = bin/moc
+RCC_DIR = bin/rcc
+UI_DIR = bin/ui

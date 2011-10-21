@@ -68,7 +68,8 @@ Command str2cmd(string input) {
 	} else if ((c.cmd).compare(MSG) == 0) {
 		// Let client handle message argument
 	} else if (c.cmd.compare(GETPEERS) == 0) {
-
+	} else if (c.cmd.compare(RETPEERS) == 0) {
+	} else if (c.cmd.compare(ISCON) == 0) {
 	} else {
 		// If does not match a command, set to invalid command
 		c.isValid = false;

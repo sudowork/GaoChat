@@ -25,6 +25,24 @@ using namespace std;
 		this->_sockDesc = sockDesc;
 	}
 
+	string Socket::getLocalAddr() {
+		sockaddr_in addr;
+		unsigned int addr_len = sizeof(addr);
+		if (getsockname(this->_sockDesc, (sockaddr *) &addr,(socklen_t *) &addr_len) < 0) {
+			error("Could not get address of peer");
+		}
+		return inet_ntoa(addr.sin_addr);
+	}
+
+	short unsigned Socket::getLocalPort() {
+		sockaddr_in addr;
+		unsigned int addr_len = sizeof(addr);
+		if (getsockname(this->_sockDesc, (sockaddr *) &addr, (socklen_t *) &addr_len) < 0) {
+			error("Could not get port of peer");
+		}
+		return ntohs(addr.sin_port);
+	}
+
 	string Socket::getRemoteAddr() {
 		sockaddr_in addr;
 		unsigned int addr_len = sizeof(addr);
@@ -43,7 +61,7 @@ using namespace std;
 		return ntohs(addr.sin_port);
 	}
 
-	int Socket::getSockFD() {
+	int Socket::sockFd() {
 		return _sockDesc;
 	}
 

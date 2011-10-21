@@ -14,7 +14,6 @@ using namespace std;
 	}
 
 	Server::Server(unsigned short port) {
-		Server();
 		this->_port = port;
 	}
 
@@ -51,30 +50,35 @@ using namespace std;
 				memset(buffer, 0, RECV_BUFFER_SIZE);
 			}
 
+			print(msg);
+
 			// Check if command and handle appropriately
 			if (isCmd(msg)) {
 				Command cmd = str2cmd(msg);
 				// If bootstrap command
 				if (cmd.isValid && cmd.cmd.compare(BOOTSTRAP) == 0) {
 					// Remove previous entry if exists
-					_clients.erase(cmd.args[0]);
+					removeClientByNick(cmd.args[1]);
 					// Add connecting client to list of clients
-					_clients.insert(pair<string,string>(t->getRemoteAddr() + ":" + cmd.args[0],cmd.args[1]));
-					// Send updated list back to client
+					string ippstr = t->getRemoteAddr() + ":" + cmd.args[0];
+					addClient(ippstr,cmd.args[1]);
+
+					// Send updated list back to all clients
 					unsigned short port;
 					istringstream(cmd.args[0]) >> port;
-					sendMsg("/bootstrap " + map2str(_clients),t->getRemoteAddr(),port);
+					blastMsg(CMD_ESCAPE + RETPEERS + CMD_DELIM + map2str(_clients_IP_N));
 				}
 				// If quit, then remove client from list of clients
 				if (cmd.isValid && cmd.cmd.compare(QUIT) == 0 ){
-					_clients.erase(cmd.args[0]);
+				//	print(cmd.args[0] + " QUIT");
+					removeClientByNick(cmd.args[0]);
 				}
 
 				// If getpeers, send client list
 				if (cmd.isValid && cmd.cmd.compare(GETPEERS) == 0) {
 					unsigned short port;
 					istringstream(cmd.args[0]) >> port;
-					sendMsg("/bootstrap " + map2str(_clients),t->getRemoteAddr(),port);
+					sendMsg("/bootstrap " + map2str(_clients_IP_N),t->getRemoteAddr(),port);
 				}
 			} else {
 				// Blast message to all peers - originator
@@ -82,9 +86,8 @@ using namespace std;
 				istringstream(msg.substr(0,msg.find(':'))) >> p;
 				msg.erase(0,msg.find(':')+1);
 
-
 				map<string,string>::iterator it;
-				for (it = _clients.begin(); it != _clients.end(); it++) {
+				for (it = _clients_IP_N.begin(); it != _clients_IP_N.end(); it++) {
 					IPPort ipp = parseIPPstr((*it).first);
 					if (ipp.ip.compare(t->getRemoteAddr()) != 0 || ipp.port != p) {
 						sendMsg(msg,ipp.ip,ipp.port);
@@ -94,6 +97,16 @@ using namespace std;
 			cout << "`" + t->getRemoteAddr() + "`:";
 			print(msg);
 		}
+	}
+
+	int Server::blastMsg(string msg) {
+		map<string,string>::iterator it;
+		for (it = _clients_IP_N.begin(); it != _clients_IP_N.end(); it++) {
+			IPPort ipp = parseIPPstr((*it).first);
+			if (sendMsg(msg,ipp.ip,ipp.port) < 0)
+				return -1;
+		}
+		return 1;
 	}
 
 	bool Server::isRunning() {
@@ -124,6 +137,24 @@ using namespace std;
 
 		// Close socket
 		delete sockSend;
+	}
+
+	bool Server::removeClientByNick(string nick) {
+		// Find client by nickname if exists
+		// And ensure that matches IP address
+		map<string,string>::iterator it = _clients_N_IP.find(nick);
+		if (it != _clients_N_IP.end()
+				&& (_clients_IP_N.find(it->second)->second.compare(it->first) == 0)) {
+			_clients_N_IP.erase(nick);
+			_clients_IP_N.erase(it->second);
+			return true;
+		}
+		return false;
+	}
+
+	void Server::addClient(string ipp, string nick) {
+		_clients_IP_N.insert(pair<string,string>(ipp,nick));
+		_clients_N_IP.insert(pair<string,string>(nick,ipp));
 	}
 
 //

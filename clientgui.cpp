@@ -24,7 +24,7 @@ ClientGUI::ClientGUI(QWidget *parent)
 	// Construct tabs
 	tabs = new QTabWidget;
 	tabs->setDocumentMode(true);
-	//tabs->setTabPosition(QTabWidget::South);
+	tabs->setTabPosition(QTabWidget::North);
 
 	Tab *groupChat = new GroupTab;
 	tabPt.insert(std::pair<QString,Tab*>(ROOTTAB,groupChat));
@@ -72,7 +72,7 @@ ClientGUI::ClientGUI(QWidget *parent)
     userSettings->addWidget(new QLabel("Nickname:"));
     userSettings->addWidget(nick);
 
-    QPushButton *conn = new QPushButton("Save");
+    QPushButton *conn = new QPushButton("Connect");
     connect(conn,SIGNAL(clicked()),this,SLOT(serverConnect()));
     QPushButton *quit = new QPushButton("Quit");
     connect(quit,SIGNAL(clicked()),this,SLOT(quit()));

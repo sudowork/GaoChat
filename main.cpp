@@ -8,7 +8,6 @@ int main(int argc, char *argv[])
     ClientGUI cgui;
 
 	QObject::connect(&a,SIGNAL(aboutToQuit()),&cgui,SLOT(quit()));
-
     cgui.show();
 
     return a.exec();

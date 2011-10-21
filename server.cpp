@@ -170,14 +170,13 @@ using namespace std;
 
 		// Check if nickname taken
 		print(map2str(_clients_N_IP));
-		if (_clients_N_IP.find(newNick) != _clients_N_IP.end())
-			print("taken");
 		while (_clients_N_IP.find(newNick) != _clients_N_IP.end()) {
 			// If taken, append underscore and iterative number
-			print("Nickname `" + nick + "` taken");
-			char *temp;
-			sprintf(temp,"%u",itNum);
-			newNick = nick + "_" + temp;
+			print("Nickname `" + newNick + "` taken");
+			char temp[6];
+			sprintf(temp,"%u",itNum++);
+
+			newNick = nick + "_" + string(temp);
 		}
 		
 		// Add ip, port, and name to map

@@ -26,12 +26,48 @@
 #include "client.h"
 
 static QString const ROOTTAB = "ROOT";
+class Tab;
+class GroupTab;
+class PeerTab;
+class CloseableTabWidget;
+class ClientGUI;
+
+class ClientGUI : public QWidget
+{
+    Q_OBJECT
+
+public:
+    ClientGUI(QWidget *parent = 0);
+    ~ClientGUI();
+private:
+    Client *client;
+	CloseableTabWidget *tabs;
+	std::map<QString,Tab*> *tabPt;
+
+    QLineEdit *serverAddr;
+    QSpinBox *serverPort;
+    QLineEdit *nick;
+    QDialog *configPrompt;
+
+	QSocketNotifier *socketEvent;
+
+	GroupTab* getRootTab();
+	void createPeerTab();
+private slots:
+    void quit();
+    void serverConnect();
+	void processMsg();
+	void newPeerTab(QListWidgetItem* peer);
+};
+
+
 
 class Tab : public QWidget {
 	Q_OBJECT
 
 public:
 	Tab(QWidget *parent=0);
+	//~Tab();
 
     bool eventFilter(QObject *watched, QEvent *e);
 	void appendChat(QString html);
@@ -56,38 +92,10 @@ class GroupTab : public Tab {
 
 public:
 	GroupTab(QWidget *parent=0);
+	//~GroupTab();
 	void consolidatePeers(std::map<std::string,std::string> peers);
 private:
 	QListWidget *online;
-};
-
-
-
-class ClientGUI : public QWidget
-{
-    Q_OBJECT
-
-public:
-    ClientGUI(QWidget *parent = 0);
-    ~ClientGUI();
-private:
-    Client *client;
-	QTabWidget *tabs;
-	std::map<QString,Tab*> tabPt;
-
-    QLineEdit *serverAddr;
-    QSpinBox *serverPort;
-    QLineEdit *nick;
-    QDialog *configPrompt;
-
-	QSocketNotifier *socketEvent;
-
-	GroupTab* getRootTab();
-private slots:
-    void quit();
-    void serverConnect();
-	void processMsg();
-	void msgPeer(QString nick);
 };
 
 
@@ -96,8 +104,26 @@ class PeerTab : public Tab {
 	Q_OBJECT
 
 public:
+	//~PeerTab();
 private:
+	QString peerNick;
 private slots:
+};
+
+
+
+class CloseableTabWidget : public QTabWidget {
+	Q_OBJECT
+
+public:
+	CloseableTabWidget(std::map<QString,Tab*> *t,QWidget* parent=0);
+	//~CloseableTabWidget();
+
+private:
+	std::map<QString,Tab*> *tabPt;
+
+private slots:
+	void closeTab(int i);
 };
 
 #endif // CLIENTGUI_H

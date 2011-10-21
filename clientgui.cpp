@@ -22,12 +22,14 @@ ClientGUI::ClientGUI(QWidget *parent)
 
 
 	// Construct tabs
-	tabs = new QTabWidget;
+	tabPt = new map<QString,Tab*>;
+	tabs = new CloseableTabWidget(tabPt);
 	tabs->setDocumentMode(true);
 	tabs->setTabPosition(QTabWidget::North);
+	tabs->setTabsClosable(true);
 
-	Tab *groupChat = new GroupTab;
-	tabPt.insert(std::pair<QString,Tab*>(ROOTTAB,groupChat));
+	Tab *groupChat = new GroupTab(this);
+	tabPt->insert(std::pair<QString,Tab*>(ROOTTAB,groupChat));
 	tabs->addTab(groupChat,"Group Chat");
 
 	QLayout *mainLayout = new QVBoxLayout;
@@ -157,11 +159,28 @@ void ClientGUI::processMsg() {
 	}
 }
 
-void ClientGUI::msgPeer(QString nick) {
+void ClientGUI::newPeerTab(QListWidgetItem* peer) {
+	// Make sure you're not trying to chat with yourself
+	if (peer->text().toStdString().compare(client->nick()) != 0) {
+		// If tab is open, give it focus
+		if (tabPt->find(peer->text()) != tabPt->end()) {
+			tabs->setCurrentIndex(tabs->indexOf(tabPt->find(peer->text())->second));
+		} else {
+			// Create new tab, pass it the client, and keep track of its pointer
+			PeerTab *pt = new PeerTab;
+			pt->passClient(client);
+			tabPt->insert(std::pair<QString,Tab*>(peer->text(),pt));
+
+			// Add tab to tab bar
+			tabs->addTab(pt,peer->text());
+			// Give tab focus
+			tabs->setCurrentIndex(tabs->indexOf(pt));
+		}
+	}
 }
 
 GroupTab* ClientGUI::getRootTab() {
-	return (GroupTab *) tabPt.find(ROOTTAB)->second;
+	return (GroupTab *) tabPt->find(ROOTTAB)->second;
 }
 
 
@@ -279,6 +298,9 @@ GroupTab::GroupTab(QWidget *parent) : Tab(parent){
     onlineContainerLayout->setSpacing(2);
     onlineContainer->setLayout(onlineContainerLayout);
 
+	// Enable double clicking on list items to message peer
+	connect(online,SIGNAL(itemDoubleClicked(QListWidgetItem*)),parent,SLOT(newPeerTab(QListWidgetItem*)));
+
     outputSplitter->addWidget(onlineContainer);
     outputSplitter->setStretchFactor(0,7);
     outputSplitter->setStretchFactor(1,3);
@@ -294,5 +316,24 @@ void GroupTab::consolidatePeers(map<string,string> peers) {
 		if (client->nick().compare(it->first) == 0) {
 			item->setBackgroundColor(QColor(255,0,0,15));
 		}
+	}
+}
+
+
+
+CloseableTabWidget::CloseableTabWidget(map<QString,Tab*> *t, QWidget* parent) : QTabWidget(parent) {
+	this->tabPt = t;
+	this->setParent(parent);
+	this->setMovable(true);
+	connect(this,SIGNAL(tabCloseRequested(int)),this,SLOT(closeTab(int)));
+}
+
+
+void CloseableTabWidget::closeTab(int i) {
+	// Make sure it's not the server chat window
+	if (i != this->indexOf(tabPt->find(ROOTTAB)->second)) {
+		// Erase from list of Tab pointers so it can be opened again
+		tabPt->erase(this->tabText(i));
+		this->removeTab(i);
 	}
 }

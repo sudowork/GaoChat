@@ -98,6 +98,9 @@ public:
 	QString peerFromList(QString nick);
 private:
 	QListWidget *online;
+	int hueSeed;
+
+	int nextHue();
 };
 
 

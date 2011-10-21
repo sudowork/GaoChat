@@ -1,6 +1,7 @@
 DESTDIR = bin/
 
-all:			client server
+#all:			client server
+all:			server
 
 common.o:		common.cpp common.h
 	g++ -c common.cpp

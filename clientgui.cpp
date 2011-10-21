@@ -29,6 +29,7 @@ ClientGUI::ClientGUI(QWidget *parent)
 	tabs->setTabsClosable(true);
 
 	Tab *groupChat = new GroupTab(this);
+	groupChat->setDisabled(true);	// Disable until connected to server
 	tabPt->insert(std::pair<QString,Tab*>(ROOTTAB,groupChat));
 	tabs->addTab(groupChat,"Group Chat");
 
@@ -121,6 +122,9 @@ void ClientGUI::serverConnect() {
 
 	// Rename server title
 	tabs->setTabText(0,serverAddr->text());
+
+	// Enable server tab
+	getRootTab()->setEnabled(true);
 
     configPrompt->accept();
 }
@@ -331,11 +335,20 @@ GroupTab::GroupTab(QWidget *parent) : Tab(parent){
     outputSplitter->addWidget(onlineContainer);
     outputSplitter->setStretchFactor(0,7);
     outputSplitter->setStretchFactor(1,3);
+
+	// Set base hue
+	hueSeed = 0;
 }
 
 void GroupTab::consolidatePeers(map<string,string> peers) {
+	/*
+	  TODO:
+	  disable tabs when user logs out
+	  */
+	// Clear old peers
 	online->clear();
 	map<string,string>::iterator it;
+
 	for (it=peers.begin(); it != peers.end(); it++) {
 		QListWidgetItem *item = new QListWidgetItem(QString::fromStdString(it->first));
 
@@ -345,7 +358,12 @@ void GroupTab::consolidatePeers(map<string,string> peers) {
 		online->addItem(item);
 		// Check if it's you
 		if (client->nick().compare(it->first) == 0) {
-			item->setBackgroundColor(QColor(255,0,0,15));
+			// Set background color to red
+			item->setBackgroundColor(QColor(255,0,0,20));
+		} else {
+			// Assign color to peers
+			// Make it look good too (use scaling hue along HSV scale)
+			item->setTextColor(QColor::fromHsv(nextHue(),255,175));
 		}
 	}
 }
@@ -357,6 +375,11 @@ QString GroupTab::peerFromList(QString nick) {
 	} else {
 		return QString();
 	}
+}
+
+int GroupTab::nextHue() {
+	hueSeed += 127;
+	return hueSeed % 360;
 }
 
 

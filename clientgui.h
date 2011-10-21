@@ -25,6 +25,44 @@
 #include "gaosocket.h"
 #include "client.h"
 
+static QString const ROOTTAB = "ROOT";
+
+class Tab : public QWidget {
+	Q_OBJECT
+
+public:
+	Tab(QWidget *parent=0);
+
+    bool eventFilter(QObject *watched, QEvent *e);
+	void appendChat(QString html);
+	void passClient(Client *c);
+private:
+    QTextEdit *chatInput;
+    QTextBrowser *chat;
+
+    void submitChatInput();
+	QString msgToHtml(QString nick, QString text);
+protected:
+	QSplitter *outputSplitter;
+	QSplitter *inputSplitter;
+	Client *client;
+private slots:
+};
+
+
+
+class GroupTab : public Tab {
+	Q_OBJECT
+
+public:
+	GroupTab(QWidget *parent=0);
+	void consolidatePeers(std::map<std::string,std::string> peers);
+private:
+	QListWidget *online;
+};
+
+
+
 class ClientGUI : public QWidget
 {
     Q_OBJECT
@@ -32,29 +70,34 @@ class ClientGUI : public QWidget
 public:
     ClientGUI(QWidget *parent = 0);
     ~ClientGUI();
-    bool eventFilter(QObject *watched, QEvent *e);
-    void submitChatInput();
 private:
     Client *client;
-    QTextEdit *chatInput;
-    QTextBrowser *chat;
-	QListWidget *online;
+	QTabWidget *tabs;
+	std::map<QString,Tab*> tabPt;
+
     QLineEdit *serverAddr;
     QSpinBox *serverPort;
     QLineEdit *nick;
     QDialog *configPrompt;
-	QTabWidget *tabs;
 
 	QSocketNotifier *socketEvent;
 
-	QString msgToHtml(QString nick, QString text);
-	void appendChat(QString html);
-	void consolidatePeers(std::map<std::string,std::string> peers);
+	GroupTab* getRootTab();
 private slots:
     void quit();
-    void saveSettings();
+    void serverConnect();
 	void processMsg();
 	void msgPeer(QString nick);
+};
+
+
+
+class PeerTab : public Tab {
+	Q_OBJECT
+
+public:
+private:
+private slots:
 };
 
 #endif // CLIENTGUI_H

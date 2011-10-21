@@ -3,7 +3,7 @@ GaoChat
 
 @product	GaoChat
 
-@version	0.1
+@version	0.2
 
 @author		Kevin Gao
 
@@ -30,12 +30,11 @@ To install, simply run the make all. No configuration is necessary since only \*
 * It is possible to start private messaging a user, by using the `/msg <nick>` command
 
 ### Future features
-* Addition of a GUI
 * Multiple group chats
 * More commands
-* Automatic refreshing of peer list
 * Ability to choose between UDP or TCP
-* Cross-platform compatibility
+* NAT traversal via UDP holepunching
+* Windows compatibility
 * Allow server to be given direct user input to control server
 
 ### Contact

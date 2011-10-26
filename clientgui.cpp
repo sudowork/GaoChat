@@ -178,8 +178,8 @@ void ClientGUI::processMsg() {
 			for (unsigned int i = 0; i < v.size(); i++) {
 				vector<string> p = explode(v[i],',');
 				client->addPeer(p[0],p[1]);
-				getRootTab()->consolidatePeers(client->getPeers());
 			}
+			getRootTab()->consolidatePeers(client->getPeers(),tabPt,tabs);
 		}
 	} else {
 		getRootTab()->appendChat(QString::fromStdString(msg));
@@ -195,6 +195,7 @@ PeerTab* ClientGUI::newPeerTab(QString ipp, QString peerNick) {
 		// Create new tab, pass it the client, and keep track of its pointer
 		PeerTab *pt = new PeerTab(ipp,peerNick);
 		pt->passClient(client);
+		pt->setToolTip(ipp);
 		tabPt->insert(std::pair<QString,Tab*>(peerNick,pt));
 
 		// Add tab to tab bar
@@ -220,6 +221,10 @@ void ClientGUI::startPeerChat(QListWidgetItem* peer) {
 
 GroupTab* ClientGUI::getRootTab() {
 	return (GroupTab *) tabPt->find(ROOTTAB)->second;
+}
+
+QTabWidget* ClientGUI::getTabs() {
+	return tabs;
 }
 
 
@@ -266,6 +271,8 @@ Tab::Tab(QWidget *parent) : QWidget (parent) {
     groupLayout->setSpacing(5);
 
 	setLayout(groupLayout);
+
+	this->setParent(parent);
 }
 
 void Tab::passClient(Client *c) {
@@ -340,16 +347,36 @@ GroupTab::GroupTab(QWidget *parent) : Tab(parent){
 	hueSeed = 0;
 }
 
-void GroupTab::consolidatePeers(map<string,string> peers) {
-	/*
-	  TODO:
-	  disable tabs when user logs out
-	  */
-	// Clear old peers
-	online->clear();
+void GroupTab::consolidatePeers(map<string,string> peers, map<QString,Tab*> *tabPt, QTabWidget *tabs) {
+	// Create a map of tabs open by <IP:Port,*Tab>
+	map<QString,Tab*> ipMap;
+	map<QString,Tab*>::iterator it1;
+	for (it1 = tabPt->begin(); it1 != tabPt->end(); it1++) {
+		ipMap.insert(std::pair<QString,Tab*>(it1->second->toolTip(),it1->second));
+	}
+
+	// Iterator for peer map
 	map<string,string>::iterator it;
 
+	// Clear old peers
+	online->clear();
+
 	for (it=peers.begin(); it != peers.end(); it++) {
+		// Check if tab is open by IP
+		map<QString,Tab*>::iterator oldTab = ipMap.find(QString::fromStdString(it->second));
+
+		if (oldTab != ipMap.end()) {
+			// If open, enable and set nickname
+			oldTab->second->setEnabled(true);
+			// Change peername in tabPt
+			tabPt->erase(tabs->tabText(tabs->indexOf(oldTab->second)));
+			tabPt->insert(std::pair<QString,Tab*>(QString::fromStdString(it->first),oldTab->second));
+			// Set tab text to new peer name
+			tabs->setTabText(tabs->indexOf(oldTab->second),QString::fromStdString(it->first));
+			// Change peername in PeerTab
+			(static_cast<PeerTab *>(oldTab->second))->peer(QString::fromStdString(it->first));
+		}
+
 		QListWidgetItem *item = new QListWidgetItem(QString::fromStdString(it->first));
 
 		// Set tooltip as IP:Port
@@ -362,7 +389,7 @@ void GroupTab::consolidatePeers(map<string,string> peers) {
 			item->setBackgroundColor(QColor(255,0,0,20));
 		} else {
 			// Assign color to peers
-			// Make it look good too (use scaling hue along HSV scale)
+			// Make it look good to (use scaling hue along HSV scale)
 			item->setTextColor(QColor::fromHsv(nextHue(),255,175));
 		}
 	}
@@ -424,6 +451,10 @@ bool PeerTab::eventFilter(QObject *dist, QEvent *event) {
         //chatInput->document()->documentLayout()->documentSize().toSize();
     }
     return false;
+}
+
+void PeerTab::peer(QString peer) {
+	_peer = peer;
 }
 
 

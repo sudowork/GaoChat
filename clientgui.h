@@ -41,6 +41,8 @@ class ClientGUI : public QWidget
 public:
     ClientGUI(QWidget *parent = 0);
     ~ClientGUI();
+
+	QTabWidget* getTabs();
 private:
     Client *client;
 	CloseableTabWidget *tabs;
@@ -94,7 +96,7 @@ class GroupTab : public Tab {
 public:
 	GroupTab(QWidget *parent=0);
 	//~GroupTab();
-	void consolidatePeers(std::map<std::string,std::string> peers);
+	void consolidatePeers(std::map<std::string,std::string> peers,std::map<QString,Tab*> *tabPt, QTabWidget* tabs);
 	QString peerFromList(QString nick);
 private:
 	QListWidget *online;

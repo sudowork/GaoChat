@@ -51,6 +51,19 @@ To install, simply run the make all. No configuration is necessary since only \*
 ### Contact
 You can reach me at `kevin<dot>gao<at>duke<dot>edu`
 
+
+Screenshots and Demonstration
+---------------
+## Client
+![](./doc/client.png)
+
+A screenshot showing interactions between 4 users.
+
+## Server
+![](./doc/server.png)
+
+A screenshot depicting the server output during the above interactions
+
 Documentation
 ---------------
 

@@ -55,11 +55,14 @@ You can reach me at `kevin<dot>gao<at>duke<dot>edu`
 Screenshots and Demonstration
 ---------------
 ## Client
-![A screenshot showing interactions between 4 users.](doc/client.png)
+[[./doc/client.png]]
 
+A screenshot depicting the interactions between 4 users
 
 ## Server
-![A screenshot depicting the server output during the above interactions](doc/server.png)
+[[./doc/server.png]]
+
+A screenshot depicting the server output during the above interactions
 
 Documentation
 ---------------

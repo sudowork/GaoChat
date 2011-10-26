@@ -61,49 +61,69 @@ A central class exists, called **Socket**. This class contains the fundamental f
 ## Common.cpp
 This file just provides a basic library that contains several constants and utility functions.
 
+
 ## Server.cpp
 Below is a list of the member functions for the Server class, as well as a description of each
+
 ### Server();
-   Constructs a new Server object with a default port of constant value S\_PORT as defined in common.h
+Constructs a new Server object with a default port of constant value S\_PORT as defined in common.h
+
 ### Server(unsigned short port);
-    Constructs a new Server object with a specified port
+Constructs a new Server object with a specified port
+
 ### ~Server();
-    Destructs the Server object. More Importantly, closes the listening socket, freeing the port and file descriptor.
+Destructs the Server object. More Importantly, closes the listening socket, freeing the port and file descriptor.
+
 ### bool start();
-    Starts the server by instantiating a new TCPSocket for listening on whatever the server's port is set to. In addition, this function begins an infinite iterative accept loop that waits on input. Within this loop, the function also checks if any commands were passed to the server and performs the appropriate action; if not, then it just echoes the received data to STDOUT. Returns true if successfully run; false otherwise. If the server receives a command, such as /bootstrap, from the client, then it will respond accordingly. Responses will be prefaced by the original command.
+Starts the server by instantiating a new TCPSocket for listening on whatever the server's port is set to. In addition, this function begins an infinite iterative accept loop that waits on input. Within this loop, the function also checks if any commands were passed to the server and performs the appropriate action; if not, then it just echoes the received data to STDOUT. Returns true if successfully run; false otherwise. If the server receives a command, such as /bootstrap, from the client, then it will respond accordingly. Responses will be prefaced by the original command.
+
 ### bool isRunning();
-    Gives the status of the server.
+Gives the status of the server.
+
 ### void stop();
-    Stops the server by destroying the socket
+Stops the server by destroying the socket
+
 ### int sendMsg(string input, string remoteAddr, unsigned short remotePort);
-	Sends a message, presumeably, to a client after receiving a command. It creates a new TCPSocket and sends the message to the client. Returns 0 if successfully sent; -1 otherwise.
+Sends a message, presumeably, to a client after receiving a command. It creates a new TCPSocket and sends the message to the client. Returns 0 if successfully sent; -1 otherwise.
+
 
 ## Client.cpp
 This is the implementation used to create a client that can communicate with the server as specified above.
 
 ### ~Client();
 ### std::string server() const;
-	Getter for the target server address. Returns IPv4 formatted string containing server address.
+Getter for the target server address. Returns IPv4 formatted string containing server address.
+
 ### bool server(std::string ip);
-	Checks if printable IPv4 address is valid and then sets the server address to it. Returns true if successfully set; otherwise, false.
+Checks if printable IPv4 address is valid and then sets the server address to it. Returns true if successfully set; otherwise, false.
+
 ### std::string nick() const;
-	Getter for client's nick name. Returns nickname as as string.
+Getter for client's nick name. Returns nickname as as string.
+
 ### void nick(std::string nick);
-	Setter for client's nick name.
+Setter for client's nick name.
+
 ### int listenPID() const;
-	Getter for child process's PID
+Getter for child process's PID
+
 ### void listenPID(int pid);
-	Setter for child process's PID
+Setter for child process's PID
+
 ### bool isValidIP(std::string ip);
-	Checks if printable IPv4 address string is a valid IPv4 address using inet_pton(). Returns true if valid; returns false if invalid.
+Checks if printable IPv4 address string is a valid IPv4 address using `inet_pton()`. Returns true if valid; returns false if invalid.
+
 ### bool bootstrap();
-	Attempts to send a bootstrap command to the specified server. If command is sent successfully, then returns true; otherwise, returns false.
+Attempts to send a bootstrap command to the specified server. If command is sent successfully, then returns true; otherwise, returns false.
+
 ### void listen();
-	A function meant to run in a forked process. This simply listens for data and echoes it out. Note that listening ports are iterated from 9002 to 9099 to allow for multiple clients on one host.
+A function meant to run in a forked process. This simply listens for data and echoes it out. Note that listening ports are iterated from 9002 to 9099 to allow for multiple clients on one host.
+
 ### void serverResp();
-	To be called after a command has been sent to the server that expects data to be returned. Handles data accordingly.
+To be called after a command has been sent to the server that expects data to be returned. Handles data accordingly.
+
 ### void userInput();
-	Main loop of the program. Awaits user input, checks if it is a command, and takes appropriate action depending on if it is or isn't.
+Main loop of the program. Awaits user input, checks if it is a command, and takes appropriate action depending on if it is or isn't.
+
 
 ## Interfacing the Server and Client
 The server and client currently send data only as strings. If a message does not follow a valid command, then it is assumed to be plaintext and sent to the appropriate channel or peer by the server. If it is a command, then the server will process it and send a reply if necessary. Currently, only the `/bootstrap` command receives feedback from the server. It is in the format of:

@@ -29,6 +29,7 @@ static const std::string GETPEERS	= "getpeers";		// Gets updated list of peers
 static const std::string RETPEERS	= "peers";			// Gets updated list of peers
 static const std::string ISCON		= "isconnected";	// Pings server to see if connected
 static const std::string FROM		= "from";			// Means from a peer
+static const std::string GROUPMSG	= "groupmsg";			// Means from a peer
 
 struct Command {
 	bool isValid;			// checks if valid command

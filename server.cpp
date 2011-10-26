@@ -72,32 +72,25 @@ using namespace std;
 				if (cmd.isValid && cmd.cmd.compare(GETPEERS) == 0) {
 					sendClientsList();
 				}
-			} else {
-				// Blast message to all peers - originator
-				/*
-				unsigned int p;
-				istringstream(msg.substr(0,msg.find(':'))) >> p;
-				msg.erase(0,msg.find(':')+1);
 
-				map<string,string>::iterator it;
-				for (it = _clients_IP_N.begin(); it != _clients_IP_N.end(); it++) {
-					IPPort ipp = parseIPPstr((*it).first);
-					if (ipp.ip.compare(t->getRemoteAddr()) != 0 || ipp.port != p) {
-						sendMsg(msg,ipp.ip,ipp.port);
-					}
-				}*/
+				// If group message, blast message to all clients except for originator
+				if (cmd.cmd.compare(GROUPMSG) == 0) {
+					blastMsg(msg,cmd.args[0]);
+				}
 			}
 			cout << "`" + t->getRemoteAddr() + "`:";
 			print(msg);
 		}
 	}
 
-	int Server::blastMsg(string msg) {
+	int Server::blastMsg(string msg, string except) {
 		map<string,string>::iterator it;
 		for (it = _clients_IP_N.begin(); it != _clients_IP_N.end(); it++) {
-			IPPort ipp = parseIPPstr((*it).first);
-			if (sendMsg(msg,ipp.ip,ipp.port) < 0)
-				return -1;
+			if (it->second.compare(except) != 0) {
+				IPPort ipp = parseIPPstr((*it).first);
+				if (sendMsg(msg,ipp.ip,ipp.port) < 0)
+					return -1;
+			}
 		}
 		return 1;
 	}

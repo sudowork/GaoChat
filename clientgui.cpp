@@ -140,6 +140,15 @@ void ClientGUI::processMsg() {
 		//string cmd = msg.substr(1,msg.find(CMD_DELIM)-1);
 		Command c = str2cmd(msg);
 
+		// Check if a group message
+		if (c.cmd.compare(GROUPMSG) == 0) {
+			// Extract nickname and message
+			QString nick = QString::fromStdString(c.args[0]);
+			QString peerMsg = QString::fromStdString(c.args[1]);
+			// Append to group chat window
+			getRootTab()->appendChat(msgToHtml(nick,peerMsg,true));
+		}
+
 		// Check if from peer
 		if (c.cmd.compare(FROM) == 0) {
 			QString nick = QString::fromStdString(c.args[0]);
@@ -303,9 +312,15 @@ bool Tab::eventFilter(QObject *dist, QEvent *event) {
 }
 
 void Tab::submitChatInput() {
-    //string input = chatInput->toPlainText().toUtf8().constData();
 	QString input = chatInput->toPlainText();
 	QString inputHtml = msgToHtml(QString::fromStdString(client->nick()),chatInput->toPlainText());
+
+	// if not a valid command, then assume group message
+	Command c = str2cmd(chatInput->toPlainText().toUtf8().constData());
+	if (!c.isValid) {
+		string groupMsgCmd = CMD_ESCAPE + GROUPMSG + CMD_DELIM + client->nick() + CMD_DELIM;
+		input = QString::fromStdString(groupMsgCmd) + input;
+	}
 
 	client->sendServerMsg(string(input.toUtf8().constData()));
 	appendChat(inputHtml);
@@ -352,6 +367,10 @@ GroupTab::GroupTab(QWidget *parent) : Tab(parent){
 }
 
 void GroupTab::consolidatePeers(map<string,string> peers, map<QString,Tab*> *tabPt, QTabWidget *tabs) {
+	/*
+	* TODO:
+	* Cleanup this entire function
+	*/
 	// Create map of peers by IP
 	map<string,string> peers_by_IP;
 	map<string,string>::iterator it0;

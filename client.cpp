@@ -158,6 +158,11 @@ bool Client::isConnected() {
 bool Client::bootstrap() {
 	print("Bootstrapping with `" + this->server() + "`...");
 
+	// Ensure not empty nickname
+	if (_nick.length() == 0) {
+		_nick = "user";
+	}
+
 	// Bootstrap command `/bootstrap <clientport> <nickname>`
 	char port[5];
 	sprintf(port,"%u",this->_port);

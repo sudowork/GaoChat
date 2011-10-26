@@ -22,7 +22,7 @@ class Server {
 		std::map<std::string,std::string> _clients_N_IP;	// Map. <NICK,IP:PORT>
 
 		int sendMsg(std::string input, std::string remoteAddr, unsigned short remotePort);
-		int blastMsg(std::string msg);
+		int blastMsg(std::string msg, std::string except="");
 		bool removeClientByNick(std::string nick);
 		bool removeClientByIPP(std::string ipp);
 		void addClient(std::string ipp, std::string nick);

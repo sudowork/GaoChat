@@ -76,6 +76,7 @@ public:
     bool eventFilter(QObject *watched, QEvent *e);
 	void appendChat(QString html);
 	void passClient(Client *c);
+	virtual std::string tabType();
 protected:
     QTextEdit *chatInput;
     QTextBrowser *chat;
@@ -84,7 +85,7 @@ protected:
 	QSplitter *inputSplitter;
 	Client *client;
 
-    void submitChatInput();
+    virtual void submitChatInput();
 private slots:
 };
 
@@ -98,6 +99,7 @@ public:
 	//~GroupTab();
 	void consolidatePeers(std::map<std::string,std::string> peers,std::map<QString,Tab*> *tabPt, QTabWidget* tabs);
 	QString peerFromList(QString nick);
+	virtual std::string tabType();
 private:
 	QListWidget *online;
 	int hueSeed;
@@ -114,21 +116,20 @@ public:
 	PeerTab(QString ipp, QString peer, QWidget *parent=0);
 	//~PeerTab();
 
-    bool eventFilter(QObject *watched, QEvent *e);
-
 	QString ip();
 	void ip(QString ip);
 	unsigned short port();
 	void port(unsigned short port);
 	QString peer();
 	void peer(QString peer);
+	virtual std::string tabType();
 private:
 	QString _ip;
 	unsigned short _port;
 	QString _peer;
 
 	// Override Tab
-	void submitChatInput();
+	virtual void submitChatInput();
 private slots:
 };
 

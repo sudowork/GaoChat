@@ -320,6 +320,10 @@ void Tab::appendChat(QString html) {
     chat->moveCursor(QTextCursor::End);
 }
 
+std::string Tab::tabType() {
+	return "TAB";
+}
+
 
 
 GroupTab::GroupTab(QWidget *parent) : Tab(parent){
@@ -348,11 +352,22 @@ GroupTab::GroupTab(QWidget *parent) : Tab(parent){
 }
 
 void GroupTab::consolidatePeers(map<string,string> peers, map<QString,Tab*> *tabPt, QTabWidget *tabs) {
+	// Create map of peers by IP
+	map<string,string> peers_by_IP;
+	map<string,string>::iterator it0;
+	for (it0 = peers.begin(); it0 != peers.end(); it0++) {
+		peers_by_IP.insert(std::pair<string,string>(it0->second,it0->first));
+	}
 	// Create a map of tabs open by <IP:Port,*Tab>
 	map<QString,Tab*> ipMap;
 	map<QString,Tab*>::iterator it1;
 	for (it1 = tabPt->begin(); it1 != tabPt->end(); it1++) {
 		ipMap.insert(std::pair<QString,Tab*>(it1->second->toolTip(),it1->second));
+		// If peer has disconnected disable tab
+		if (it1->second->tabType().compare("PEER") == 0 &&
+		        peers_by_IP.find(it1->second->toolTip().toStdString()) == peers_by_IP.end()) {
+			it1->second->setEnabled(false);
+		}
 	}
 
 	// Iterator for peer map
@@ -364,7 +379,6 @@ void GroupTab::consolidatePeers(map<string,string> peers, map<QString,Tab*> *tab
 	for (it=peers.begin(); it != peers.end(); it++) {
 		// Check if tab is open by IP
 		map<QString,Tab*>::iterator oldTab = ipMap.find(QString::fromStdString(it->second));
-
 		if (oldTab != ipMap.end()) {
 			// If open, enable and set nickname
 			oldTab->second->setEnabled(true);
@@ -373,7 +387,7 @@ void GroupTab::consolidatePeers(map<string,string> peers, map<QString,Tab*> *tab
 			tabPt->insert(std::pair<QString,Tab*>(QString::fromStdString(it->first),oldTab->second));
 			// Set tab text to new peer name
 			tabs->setTabText(tabs->indexOf(oldTab->second),QString::fromStdString(it->first));
-			// Change peername in PeerTab
+			// Change peer name in PeerTab, so it sends to the right person
 			(static_cast<PeerTab *>(oldTab->second))->peer(QString::fromStdString(it->first));
 		}
 
@@ -409,13 +423,16 @@ int GroupTab::nextHue() {
 	return hueSeed % 360;
 }
 
+std::string GroupTab::tabType() {
+	return "GROUP";
+}
+
 
 
 PeerTab::PeerTab(QString ipp, QString peer, QWidget *parent) : Tab(parent) {
 	this->_ip = ipp.split(":").at(0);
 	this->_port = ipp.split(":").at(1).toUShort();
 	this->_peer = peer;
-	chatInput->installEventFilter(this);
 }
 
 void PeerTab::submitChatInput() {
@@ -430,31 +447,12 @@ void PeerTab::submitChatInput() {
     chatInput->clear();
 }
 
-bool PeerTab::eventFilter(QObject *dist, QEvent *event) {
-    // Check for keypress
-    if (event->type() == QEvent::KeyPress) {
-        // Cast to keyEvent
-        QKeyEvent *e = static_cast<QKeyEvent *>(event);
-        // Check if return is pressed
-        if ((e->key() == Qt::Key_Return)) {
-            // Make sure enter is not escaped w/ alt modifier
-            if (e->modifiers() != Qt::AltModifier) {
-		        this->submitChatInput();
-				return true;
-            } else {
-                // if alt is used, then just insert a return
-				chatInput->insertPlainText(QString("\n"));
-				chatInput->ensureCursorVisible();
-				return true;
-            }
-        }
-        //chatInput->document()->documentLayout()->documentSize().toSize();
-    }
-    return false;
-}
-
 void PeerTab::peer(QString peer) {
 	_peer = peer;
+}
+
+std::string PeerTab::tabType() {
+	return "PEER";
 }
 
 

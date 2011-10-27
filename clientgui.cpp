@@ -133,9 +133,7 @@ void ClientGUI::processMsg() {
 	string msg = client->readSocket();
 
 	// If command, perform action
-	//if (isCmd(msg) && (str2cmd(msg)).isValid) {
 	if (isCmd(msg)) {
-		print("Response: " + msg);
 		// Split cmd
 		//string cmd = msg.substr(1,msg.find(CMD_DELIM)-1);
 		Command c = str2cmd(msg);
